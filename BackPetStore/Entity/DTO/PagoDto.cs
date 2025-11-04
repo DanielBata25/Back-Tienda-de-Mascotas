@@ -1,7 +1,5 @@
-﻿using Entity.DTOs.Base;
-using System;
-
-namespace Entity.DTOs.Pago
+﻿
+namespace Entity.DTOs
 {
     public class PagoDto : BaseDTO
     {

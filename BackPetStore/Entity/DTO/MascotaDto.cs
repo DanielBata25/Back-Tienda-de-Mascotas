@@ -1,7 +1,5 @@
-﻿using Entity.DTOs.Base;
-using System;
-
-namespace Entity.DTOs.Mascota
+﻿
+namespace Entity.DTOs
 {
     public class MascotaDto : BaseDTO
     {

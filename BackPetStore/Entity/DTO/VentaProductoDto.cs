@@ -1,6 +1,5 @@
-﻿using Entity.DTOs.Base;
-
-namespace Entity.DTOs.Pivotes
+﻿
+namespace Entity.DTOs
 {
     public class VentaProductoDto : BaseDTO
     {

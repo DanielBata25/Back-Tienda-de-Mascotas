@@ -1,6 +1,5 @@
-﻿using Entity.DTOs.Base;
-
-namespace Entity.DTOs.Producto
+﻿
+namespace Entity.DTOs
 {
     public class ProductoDto : BaseDTO
     {

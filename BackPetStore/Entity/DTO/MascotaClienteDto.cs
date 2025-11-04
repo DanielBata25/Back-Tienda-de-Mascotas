@@ -1,7 +1,5 @@
-﻿using Entity.DTOs.Base;
-using System;
-
-namespace Entity.DTOs.Pivotes
+﻿
+namespace Entity.DTOs
 {
     public class MascotaClienteDto : BaseDTO
     {

@@ -1,7 +1,5 @@
-﻿using Entity.DTOs.Base;
-using System;
-
-namespace Entity.DTOs.Venta
+﻿
+namespace Entity.DTOs
 {
     public class VentaDto : BaseDTO
     {

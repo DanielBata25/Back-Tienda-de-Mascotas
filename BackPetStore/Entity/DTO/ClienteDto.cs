@@ -1,6 +1,4 @@
-﻿using Entity.DTOs.Base;
-
-namespace Entity.DTOs.Cliente
+﻿namespace Entity.DTOs
 {
     public class ClienteDto : BaseDTO
     {

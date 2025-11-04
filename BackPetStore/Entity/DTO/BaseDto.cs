@@ -1,4 +1,4 @@
-﻿namespace Entity.DTOs.Base
+﻿namespace Entity.DTOs
 {
     public class BaseDTO
     {
