@@ -3,6 +3,8 @@ using Entity.Model;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Data.Init
 {
@@ -13,16 +15,19 @@ namespace Data.Init
             // Ejecuta migraciones pendientes
             context.Database.Migrate();
 
-
+            // ============================================
+            //  CLIENTES
+            // ============================================
             if (!context.Clientes.Any())
             {
                 var cliente1 = new Cliente
                 {
-                    Nombre = "Camilo",
-                    Apellido = "Charry",
+                    Nombre = "Roberto",
+                    Apellido = "Toby",
                     Email = "camilo.charry@correo.com",
                     Telefono = "3001234567",
                     Direccion = "Neiva - Huila",
+                    Password = HashPassword("12345"),
                     IsDeleted = false
                 };
 
@@ -33,6 +38,7 @@ namespace Data.Init
                     Email = "laura.michel@correo.com",
                     Telefono = "3109876543",
                     Direccion = "Pitalito - Huila",
+                    Password = HashPassword("12345"),
                     IsDeleted = false
                 };
 
@@ -40,7 +46,9 @@ namespace Data.Init
                 context.SaveChanges();
             }
 
-
+            // ============================================
+            //  MASCOTAS
+            // ============================================
             if (!context.Mascotas.Any())
             {
                 var mascota1 = new Mascota
@@ -72,18 +80,25 @@ namespace Data.Init
 
             if (!context.MascotaClientes.Any())
             {
+                var mascotas = context.Mascotas.OrderBy(m => m.Id).ToList();
+                var clientes = context.Clientes.OrderBy(c => c.Id).ToList();
+
                 var mascotaCliente1 = new MascotaCliente
                 {
-                    MascotaId = context.Mascotas.First().Id,
-                    ClienteId = context.Clientes.First().Id,
+                    MascotaId = mascotas.First().Id,
+                    MascotaNombre = mascotas.First().Nombre, // 👈 agregado
+                    ClienteId = clientes.First().Id,
+                    ClienteNombre = clientes.First().Nombre + " " + clientes.First().Apellido, // 👈 agregado
                     FechaRegistro = DateTime.Now,
                     IsDeleted = false
                 };
 
                 var mascotaCliente2 = new MascotaCliente
                 {
-                    MascotaId = context.Mascotas.Last().Id,
-                    ClienteId = context.Clientes.Last().Id,
+                    MascotaId = mascotas.Last().Id,
+                    MascotaNombre = mascotas.Last().Nombre, // 👈 agregado
+                    ClienteId = clientes.Last().Id,
+                    ClienteNombre = clientes.Last().Nombre + " " + clientes.Last().Apellido, // 👈 agregado
                     FechaRegistro = DateTime.Now,
                     IsDeleted = false
                 };
@@ -92,6 +107,9 @@ namespace Data.Init
                 context.SaveChanges();
             }
 
+            // ============================================
+            //  PRODUCTOS
+            // ============================================
             if (!context.Productos.Any())
             {
                 var producto1 = new Producto
@@ -118,11 +136,14 @@ namespace Data.Init
                 context.SaveChanges();
             }
 
+            // ============================================
+            //  VENTAS
+            // ============================================
             if (!context.Ventas.Any())
             {
                 var venta1 = new Venta
                 {
-                    ClienteId = context.Clientes.First().Id,
+                    ClienteId = context.Clientes.OrderBy(c => c.Id).First().Id,
                     FechaVenta = DateTime.Now,
                     Estado = "Completada",
                     Canal = "Tienda Física",
@@ -134,10 +155,13 @@ namespace Data.Init
                 context.SaveChanges();
             }
 
+            // ============================================
+            //  VENTA–PRODUCTO
+            // ============================================
             if (!context.VentaProductos.Any())
             {
-                var venta = context.Ventas.First();
-                var producto = context.Productos.First();
+                var venta = context.Ventas.OrderBy(v => v.Id).First();
+                var producto = context.Productos.OrderBy(p => p.Id).First();
 
                 var ventaProducto = new VentaProducto
                 {
@@ -152,23 +176,35 @@ namespace Data.Init
                 context.SaveChanges();
             }
 
-
+            // ============================================
+            //  PAGOS
+            // ============================================
             if (!context.Pagos.Any())
             {
                 var pago1 = new Pago
                 {
-                    VentaId = context.Ventas.First().Id,
+                    VentaId = context.Ventas.OrderBy(v => v.Id).First().Id,
                     FechaPago = DateTime.Now,
                     Monto = 170000m,
                     MetodoPago = "Efectivo",
                     EstadoPago = "Aprobado",
-                    Referencia = "PAG-" + Guid.NewGuid().ToString("N").Substring(0, 8),
+                    Referencia = "PAG-" + Guid.NewGuid().ToString("N")[..8],
                     IsDeleted = false
                 };
 
                 context.Pagos.Add(pago1);
                 context.SaveChanges();
             }
+        }
+
+        // ============================================
+        //  FUNCIONALIDAD: HASH DE CONTRASEÑAS
+        // ============================================
+        private static string HashPassword(string password)
+        {
+            using var sha = SHA256.Create();
+            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(bytes);
         }
     }
 }

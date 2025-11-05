@@ -28,32 +28,29 @@ namespace Business.Services
 
         public async Task<string?> AuthenticateAsync(LoginDto loginDto)
         {
-            // 🔍 Buscar cliente por correo
+            // Buscar cliente por correo
             var cliente = await _context.Clientes
                 .FirstOrDefaultAsync(c => c.Email == loginDto.Email && !c.IsDeleted);
 
             if (cliente == null)
                 return null;
 
-            // 🔐 Validar contraseña
+            // Validar contraseña
             if (!VerifyPassword(loginDto.Password, cliente.Password))
                 return null;
 
-            // 🎟️ Claims personalizados del cliente
+            // Claims personalizados del cliente
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, cliente.Id.ToString()),
                 new Claim(ClaimTypes.Email, cliente.Email),
                 new Claim("nombre", $"{cliente.Nombre} {cliente.Apellido}"),
-                new Claim("rol", "Cliente")
+                new Claim(ClaimTypes.Role, "Cliente")
             };
 
-            // 🔑 Clave secreta
+            // Clave secreta y tiempo de expiración
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            // ⏰ Tiempo de expiración configurable desde appsettings.json
-            int expirationMinutes = _configuration.GetValue<int>("Jwt:ExpirationMinutes", 30);
+            int expirationMinutes = _configuration.GetValue<int>("Jwt:ExpirationMinutes", 60);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -65,13 +62,38 @@ namespace Business.Services
                 )
             };
 
+            var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
 
-        // ============================================
-        // 🔐 HASH + VERIFICACIÓN
-        // ============================================
+
+        public async Task<Cliente?> RegisterAsync(RegisterDto dto)
+        {
+            // Verificar si el correo ya existe
+            var existe = await _context.Clientes.AnyAsync(c => c.Email == dto.Email && !c.IsDeleted);
+            if (existe)
+                throw new InvalidOperationException("Ya existe un cliente registrado con este correo electrónico.");
+
+            // Crear nuevo cliente
+            var cliente = new Cliente
+            {
+                Nombre = dto.Nombre,
+                Apellido = dto.Apellido,
+                Email = dto.Email,
+                Telefono = dto.Telefono,
+                Direccion = dto.Direccion,
+                Password = HashPassword(dto.Password),
+                IsDeleted = false
+            };
+
+            await _context.Clientes.AddAsync(cliente);
+            await _context.SaveChangesAsync();
+
+            return cliente;
+        }
+
+
         private static string HashPassword(string password)
         {
             using var sha = SHA256.Create();
@@ -81,8 +103,8 @@ namespace Business.Services
 
         private static bool VerifyPassword(string inputPassword, string storedPassword)
         {
-            // Permite tanto contraseñas en texto plano como hash (por compatibilidad)
             var inputHash = HashPassword(inputPassword);
+            // Permite login con texto plano (por compatibilidad) o cifrado
             return storedPassword == inputPassword || storedPassword == inputHash;
         }
     }
